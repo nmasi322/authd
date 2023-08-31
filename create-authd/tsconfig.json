@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "module": "ES2020",
+    "target": "ES2022",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "noImplicitAny": true,
+    "declaration": true,
+    "esModuleInterop": true,
+    "moduleResolution": "bundler"
+  },
+  "include": ["src", "template-nodejs"],
+  "exclude": ["node_modules"]
+}

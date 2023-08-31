@@ -1,0 +1,53 @@
+{
+  "name": "@divine_edeh/authd",
+  "version": "0.0.1",
+  "description": "Backend Authentication setup on the fly",
+  "main": "dist/index.js",
+  "type": "module",
+  "types": "dist/index.d.ts",
+  "files": [
+    "/dist",
+    "./index.js",
+    "/src/create-authd"
+  ],
+  "bin": {
+    "create-authd": "./index.js"
+  },
+  "engines": {
+    "node": "^16.0.0 || >=20.0.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nmasi322/authd.git"
+  },
+  "keywords": [
+    "auth",
+    "authentication",
+    "backend-setup",
+    "backend-authentication"
+  ],
+  "author": "Divinefavour Edeh",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nmasi322/authd/issues"
+  },
+  "homepage": "https://github.com/nmasi322/authd#readme",
+  "dependencies": {
+    "cross-spawn": "^7.0.3",
+    "dotenv": "^16.3.1",
+    "kolorist": "^1.8.0",
+    "minimist": "^1.2.8",
+    "prompts": "^2.4.2",
+    "typescript": "^5.2.2",
+    "unbuild": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/cross-spawn": "^6.0.2",
+    "@types/minimist": "^1.2.2",
+    "@types/node": "^20.5.7",
+    "@types/prompts": "^2.4.4"
+  }
+}

@@ -2,7 +2,7 @@ import path from "node:path";
 import fs from "node:fs";
 import minimist from "minimist";
 import prompts from "prompts";
-import { reset, red, lightBlue } from "kolorist";
+import { reset, red, lightBlue, magenta } from "kolorist";
 import { fileURLToPath } from "node:url";
 import spawn from "cross-spawn";
 import { blue, green, yellow } from "kolorist";
@@ -15,6 +15,18 @@ const Frameworks = [
         name: "nodejs",
         display: "NodeJs",
         color: green,
+        moduleSystem: [
+            {
+                display: "Common JS",
+                templateName: "nodejs-vanilla",
+                color: magenta,
+            },
+            {
+                display: "Module",
+                templateName: "nodejs-module",
+                color: lightBlue,
+            },
+        ],
         variants: [
             {
                 name: "nodejs-ts",
@@ -22,14 +34,9 @@ const Frameworks = [
                 color: blue,
             },
             {
-                name: "nodejs",
+                name: "nodejs-vanilla",
                 display: "JavaScript",
                 color: yellow,
-            },
-            {
-                name: "python",
-                display: "Python",
-                color: lightBlue,
             },
         ],
     },
@@ -70,15 +77,6 @@ async function initialise() {
                     ` is not empty. Remove existing files and continue?`,
             },
             {
-                type: (_, { overwrite }) => {
-                    if (overwrite === false) {
-                        throw new Error(red("✖") + " Operation cancelled :(");
-                    }
-                    return null;
-                },
-                name: "overwriteChecker",
-            },
-            {
                 type: () => (isValidPackageName(getProjectName()) ? null : "text"),
                 name: "packageName",
                 message: reset("Package name:"),
@@ -112,6 +110,30 @@ async function initialise() {
                     };
                 }),
             },
+            {
+                type: (framework) => {
+                    console.log(framework);
+                    return framework && framework.moduleSystem ? "select" : null;
+                },
+                name: "moduleSystem",
+                message: reset("Select a module system:"),
+                choices: (framework) => framework.moduleSystem.map((module) => {
+                    const moduleColor = module.color;
+                    return {
+                        title: moduleColor(module.display || module.templateName),
+                        value: module.templateName,
+                    };
+                }),
+            },
+            {
+                type: (_, { overwrite }) => {
+                    if (overwrite === false) {
+                        throw new Error(red("✖") + " Operation cancelled :(");
+                    }
+                    return null;
+                },
+                name: "overwriteChecker",
+            },
         ], {
             onCancel: () => {
                 throw new Error(red("✖") + " Operation cancelled :(");
@@ -122,7 +144,9 @@ async function initialise() {
         console.log(cancelled.message);
         return;
     }
-    const { packageName, overwrite, framework, variant } = result;
+    const { packageName, overwrite, framework, variant, moduleSystem } = result;
+    console.log(framework);
+    console.log(moduleSystem);
     const rootPath = path.join(cwd, targetDir);
     if (overwrite) {
         emptyDir(rootPath);
@@ -131,7 +155,13 @@ async function initialise() {
         fs.mkdirSync(rootPath, { recursive: true });
     }
     // determine template
-    let template = variant || framework?.name || argTemplate;
+    let template;
+    if (moduleSystem) {
+        template = moduleSystem || variant || framework?.name || argTemplate;
+    }
+    else {
+        template = variant || framework?.name || argTemplate;
+    }
     const pkgInfo = getPackageManager();
     const pkgManager = pkgInfo ? pkgInfo.name : "npm";
     const isYarn1 = pkgManager === "yarn" && pkgInfo?.version.startsWith("1.");

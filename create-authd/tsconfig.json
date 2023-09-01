@@ -9,6 +9,6 @@
     "esModuleInterop": true,
     "moduleResolution": "bundler"
   },
-  "include": ["src", "template-nodejs"],
+  "include": ["src"],
   "exclude": ["node_modules"]
 }

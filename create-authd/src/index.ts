@@ -2,7 +2,7 @@ import path from "node:path";
 import fs from "node:fs";
 import minimist from "minimist";
 import prompts from "prompts";
-import { reset, red, lightBlue } from "kolorist";
+import { reset, red, lightBlue, magenta } from "kolorist";
 import { fileURLToPath } from "node:url";
 import spawn from "cross-spawn";
 import { blue, green, yellow } from "kolorist";
@@ -16,11 +16,17 @@ interface FrameworkVariant {
   color: ColourFunc;
   customCommand?: string;
 }
+interface ModuleSystem {
+  templateName: string;
+  display: string;
+  color: ColourFunc;
+}
 interface Framework {
   name: string;
   display: string;
   color: ColourFunc;
   variants?: FrameworkVariant[];
+  moduleSystem?: ModuleSystem[];
 }
 
 // excludes numerical autoconversion of project name by defining that the args
@@ -37,6 +43,18 @@ const Frameworks: Framework[] = [
     name: "nodejs",
     display: "NodeJs",
     color: green,
+    moduleSystem: [
+      {
+        display: "Common JS",
+        templateName: "nodejs-vanilla",
+        color: magenta,
+      },
+      {
+        display: "Module",
+        templateName: "nodejs-module",
+        color: lightBlue,
+      },
+    ],
     variants: [
       {
         name: "nodejs-ts",
@@ -44,14 +62,9 @@ const Frameworks: Framework[] = [
         color: blue,
       },
       {
-        name: "nodejs",
+        name: "nodejs-vanilla",
         display: "JavaScript",
         color: yellow,
-      },
-      {
-        name: "python",
-        display: "Python",
-        color: lightBlue,
       },
     ],
   },
@@ -87,6 +100,7 @@ async function initialise() {
     | "packageName"
     | "framework"
     | "variant"
+    | "moduleSystem"
     | "overwriteChecker"
   >;
 
@@ -113,15 +127,7 @@ async function initialise() {
               : `Target directory "${targetDir}"`) +
             ` is not empty. Remove existing files and continue?`,
         },
-        {
-          type: (_, { overwrite }: { overwrite?: boolean }) => {
-            if (overwrite === false) {
-              throw new Error(red("✖") + " Operation cancelled :(");
-            }
-            return null;
-          },
-          name: "overwriteChecker",
-        },
+
         {
           type: () => (isValidPackageName(getProjectName()) ? null : "text"),
           name: "packageName",
@@ -163,6 +169,31 @@ async function initialise() {
               };
             }),
         },
+        {
+          type: (framework: Framework) => {
+            console.log(framework);
+            return framework && framework.moduleSystem ? "select" : null;
+          },
+          name: "moduleSystem",
+          message: reset("Select a module system:"),
+          choices: (framework: Framework) =>
+            framework.moduleSystem.map((module) => {
+              const moduleColor = module.color;
+              return {
+                title: moduleColor(module.display || module.templateName),
+                value: module.templateName,
+              };
+            }),
+        },
+        {
+          type: (_, { overwrite }: { overwrite?: boolean }) => {
+            if (overwrite === false) {
+              throw new Error(red("✖") + " Operation cancelled :(");
+            }
+            return null;
+          },
+          name: "overwriteChecker",
+        },
       ],
       {
         onCancel: () => {
@@ -175,7 +206,9 @@ async function initialise() {
     return;
   }
 
-  const { packageName, overwrite, framework, variant } = result;
+  const { packageName, overwrite, framework, variant, moduleSystem } = result;
+  console.log(framework);
+  console.log(moduleSystem);
 
   const rootPath = path.join(cwd, targetDir);
 
@@ -186,7 +219,12 @@ async function initialise() {
   }
 
   // determine template
-  let template: string = variant || framework?.name || argTemplate;
+  let template: string;
+  if (moduleSystem) {
+    template = moduleSystem || variant || framework?.name || argTemplate;
+  } else {
+    template = variant || framework?.name || argTemplate;
+  }
 
   const pkgInfo = getPackageManager();
   const pkgManager = pkgInfo ? pkgInfo.name : "npm";

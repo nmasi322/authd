@@ -1,6 +1,6 @@
 {
   "name": "create-authd",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "Backend Authentication setup on the fly",
   "main": "dist/index.js",
   "type": "module",

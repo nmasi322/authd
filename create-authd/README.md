@@ -15,13 +15,13 @@ npm create authd@latest
 With yarn run:
 
 ```
-yarn create vite
+yarn create authd
 ```
 
 With pnpm, run
 
 ```
-pnpm create vite
+pnpm create authd
 ```
 
 Then follow the instructions.

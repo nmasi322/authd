@@ -18,10 +18,10 @@ With yarn run:
 yarn create vite
 ```
 
-With pnpm, run
+With pnpm, authd
 
 ```
-pnpm create vite
+pnpm create authd
 ```
 
 Then follow the instructions.

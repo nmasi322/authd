@@ -9,9 +9,9 @@ const PORT = process.env.PORT || 3000;
 sequelize
   .sync() // Sync models with the database
   .then(() => {
-    console.log("Connected to the database");
+    console.log("Connected to the database 🚀");
     app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
+      console.log(`📡 Server is running on port ${PORT}`);
     });
   })
   .catch((err) => console.error("Error connecting to the database", err));

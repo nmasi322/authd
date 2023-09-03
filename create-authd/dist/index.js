@@ -5,7 +5,7 @@ import prompts from "prompts";
 import { reset, red, lightBlue, magenta } from "kolorist";
 import { fileURLToPath } from "node:url";
 import spawn from "cross-spawn";
-import { blue, green, yellow } from "kolorist";
+import { green, yellow } from "kolorist";
 // excludes numerical autoconversion of project name by defining that the args
 // non associated with an option ( _ ) needs to be parsed as a string.
 const argv = minimist(process.argv.slice(2), { string: ["_"] });
@@ -29,21 +29,25 @@ const Frameworks = [
         ],
         variants: [
             {
-                name: "nodejs-ts",
-                display: "TypeScript",
-                color: blue,
-            },
-            {
-                name: "nodejs-vanilla",
-                display: "JavaScript",
+                name: "nodejs-mongo-vanilla",
+                display: "JavaScript & MongoDB",
                 color: yellow,
             },
+            {
+                name: "nodejs-postgres-vanilla",
+                display: "JavaScript & Postgres",
+                color: yellow,
+            },
+            // {
+            //   name: "template-nodejs-mongo-typescript",
+            //   display: "Typescript & MongoDB",
+            //   color: cyan,
+            // },
         ],
     },
 ];
 const templates = Frameworks.map((framework) => (framework.variants &&
     framework.variants.map((variant) => variant.name)) || [framework.name]).reduce((a, b) => a.concat(b), []);
-console.log(`Templates: ${templates}`);
 const renameFiles = {
     _gitignore: ".gitignore",
 };
@@ -112,7 +116,6 @@ async function initialise() {
             },
             {
                 type: (framework) => {
-                    console.log(framework);
                     return framework && framework.moduleSystem ? "select" : null;
                 },
                 name: "moduleSystem",
@@ -145,8 +148,6 @@ async function initialise() {
         return;
     }
     const { packageName, overwrite, framework, variant, moduleSystem } = result;
-    console.log(framework);
-    console.log(moduleSystem);
     const rootPath = path.join(cwd, targetDir);
     if (overwrite) {
         emptyDir(rootPath);
@@ -220,7 +221,8 @@ async function initialise() {
     pkg.name = packageName || getProjectName();
     write("package.json", JSON.stringify(pkg, null, 2) + "\n");
     const cdProjectName = path.relative(cwd, rootPath);
-    console.log(`\nDone. Now run:\n`);
+    console.log(`\nDone. Now go setup your config and database details`);
+    console.log(`\nThen run:\n`);
     if (rootPath !== cwd) {
         console.log(`  cd ${cdProjectName.includes(" ") ? `"${cdProjectName}"` : cdProjectName}`);
     }

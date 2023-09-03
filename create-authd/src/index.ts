@@ -2,7 +2,7 @@ import path from "node:path";
 import fs from "node:fs";
 import minimist from "minimist";
 import prompts from "prompts";
-import { reset, red, lightBlue, magenta } from "kolorist";
+import { reset, red, lightBlue, magenta, cyan } from "kolorist";
 import { fileURLToPath } from "node:url";
 import spawn from "cross-spawn";
 import { blue, green, yellow } from "kolorist";
@@ -57,15 +57,20 @@ const Frameworks: Framework[] = [
     ],
     variants: [
       {
-        name: "nodejs-ts",
-        display: "TypeScript",
-        color: blue,
-      },
-      {
-        name: "nodejs-vanilla",
-        display: "JavaScript",
+        name: "nodejs-mongo-vanilla",
+        display: "JavaScript & MongoDB",
         color: yellow,
       },
+      {
+        name: "nodejs-postgres-vanilla",
+        display: "JavaScript & Postgres",
+        color: yellow,
+      },
+      // {
+      //   name: "template-nodejs-mongo-typescript",
+      //   display: "Typescript & MongoDB",
+      //   color: cyan,
+      // },
     ],
   },
 ];
@@ -75,7 +80,6 @@ const templates = Frameworks.map(
     (framework.variants &&
       framework.variants.map((variant) => variant.name)) || [framework.name]
 ).reduce((a, b) => a.concat(b), []);
-console.log(`Templates: ${templates}`);
 
 const renameFiles: Record<string, string | undefined> = {
   _gitignore: ".gitignore",
@@ -171,7 +175,6 @@ async function initialise() {
         },
         {
           type: (framework: Framework) => {
-            console.log(framework);
             return framework && framework.moduleSystem ? "select" : null;
           },
           name: "moduleSystem",
@@ -207,8 +210,6 @@ async function initialise() {
   }
 
   const { packageName, overwrite, framework, variant, moduleSystem } = result;
-  console.log(framework);
-  console.log(moduleSystem);
 
   const rootPath = path.join(cwd, targetDir);
 
@@ -306,7 +307,8 @@ async function initialise() {
   write("package.json", JSON.stringify(pkg, null, 2) + "\n");
 
   const cdProjectName = path.relative(cwd, rootPath);
-  console.log(`\nDone. Now run:\n`);
+  console.log(`\nDone. Now go setup your config and database details`);
+  console.log(`\nThen run:\n`);
   if (rootPath !== cwd) {
     console.log(
       `  cd ${

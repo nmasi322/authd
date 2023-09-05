@@ -1,26 +1,37 @@
-const express = require("express");
-const bodyParser = require("body-parser");
-const sequelize = require("./config/database");
-const AuthRoutes = require("./routes/authRoutes");
+import sequelize from "./config/database.js";
+import express from "express";
+import http from "http";
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const httpServer = http.createServer(app);
+
+// Pre-route middlewares
+import preRouteMiddleware from "./middlewares/pre-route.middleware.js";
+preRouteMiddleware(app);
+
+// routes
+import routes from "./routes/index.js";
+app.use(routes);
+
+// Error middlewares
+import errorMiddleware from "./middlewares/error.js";
+errorMiddleware(app);
 
 sequelize
   .sync() // Sync models with the database
   .then(() => {
-    console.log("Connected to the database 🚀");
-    app.listen(PORT, () => {
-      console.log(`📡 Server is running on port ${PORT}`);
-    });
+    console.log("🚀 Connected to the database");
   })
   .catch((err) => console.error("Error connecting to the database", err));
 
-app.use(bodyParser.json());
+// Listen to server port
+import { PORT } from "./config/config.js";
 
-app.use("/api/auth", AuthRoutes);
+httpServer.listen(PORT, async () => {
+  console.log(`📡 Server listening on port @ http://localhost:${PORT}`);
+});
 
-app.use((err, req, res, next) => {
-  console.error(err);
-  res.status(500).json(apiResponse("An error occurred", err.message, false));
+// On server error
+app.on("error", (error) => {
+  console.error(`:( An error occurred on the server: \n ${error}`);
 });

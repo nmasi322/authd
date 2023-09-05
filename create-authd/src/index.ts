@@ -66,11 +66,11 @@ const Frameworks: Framework[] = [
         display: "JavaScript & Postgres",
         color: yellow,
       },
-      // {
-      //   name: "template-nodejs-mongo-typescript",
-      //   display: "Typescript & MongoDB",
-      //   color: cyan,
-      // },
+      {
+        name: "nodejs-mongo-typescript",
+        display: "Typescript & MongoDB",
+        color: cyan,
+      },
     ],
   },
 ];
@@ -163,7 +163,7 @@ async function initialise() {
           type: (framework: Framework) =>
             framework && framework.variants ? "select" : null,
           name: "variant",
-          message: reset("Select a variant:"),
+          message: reset("Select a variant: "),
           choices: (framework: Framework) =>
             framework.variants.map((variant) => {
               const variantColor = variant.color;
@@ -307,7 +307,9 @@ async function initialise() {
   write("package.json", JSON.stringify(pkg, null, 2) + "\n");
 
   const cdProjectName = path.relative(cwd, rootPath);
-  console.log(`\nDone. Now go setup your config and database details`);
+  console.log(
+    `\nDone. Now go to https://www.useplunk.com/ signup and grab your mailing api keys, then setup your config details`
+  );
   console.log(`\nThen run:\n`);
   if (rootPath !== cwd) {
     console.log(

@@ -1,39 +1,30 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const bodyParser = require("body-parser");
-const AuthRoutes = require("./routes/authRoutes");
-const config = require("./config/config");
-const dotenv = require("dotenv");
+import express from "express";
+import http from "http";
+import "./database/mongo.js";
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-dotenv.config();
+const httpServer = http.createServer(app);
 
-mongoose
-  .connect(config.dbConnectionString, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => {
-    console.log("Connected to the database");
-    app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
-    });
-  })
-  .catch((err) => console.error("Error connecting to the database", err));
+// Pre-route middlewares
+import preRouteMiddleware from "./middlewares/pre-route.middleware.js";
+preRouteMiddleware(app);
 
-app.use(bodyParser.json());
+// routes
+import routes from "./routes/index.js";
+app.use(routes);
 
-app.use("/api/auth", AuthRoutes);
-app.use("/", (_, res) =>
-  res.status(200).send({
-    message: "Ping",
-    data: "lift off",
-    success: true,
-  })
-);
+// Error middlewares
+import errorMiddleware from "./middlewares/error.js";
+errorMiddleware(app);
 
-app.use((err, req, res, next) => {
-  console.error(err);
-  res.status(500).json({ message: "An error occurred", error: err.message });
+// Listen to server port
+import { PORT } from "./config/config.js";
+
+httpServer.listen(PORT, async () => {
+  console.log(`📡 Server listening on port @ http://localhost:${PORT}`);
+});
+
+// On server error
+app.on("error", (error) => {
+  console.error(`:( An error occurred on the server: \n ${error}`);
 });

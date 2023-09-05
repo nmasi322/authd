@@ -1,10 +1,10 @@
-const { Sequelize } = require("sequelize");
-const config = require("./config"); // Import your configuration
+import { Sequelize } from "sequelize";
+import { POSTGRES_URI } from "./config.js";
 
 // Create a new Sequelize instance
-const sequelize = new Sequelize(config.dbConnectionString, {
+const sequelize = new Sequelize(POSTGRES_URI, {
   dialect: "postgres",
   logging: false, // Disable logging SQL queries (optional)
 });
 
-module.exports = sequelize;
+export default sequelize;

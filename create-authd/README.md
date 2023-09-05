@@ -9,7 +9,7 @@ Inspired by:
 To install with npm run:
 
 ```
-npm create authd@latest
+npm create authd
 ```
 
 With yarn run:

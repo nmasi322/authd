@@ -20,12 +20,16 @@ const auth = (requiresVerifiedEmail = true) => {
     res: Response,
     next: NextFunction
   ) => {
-    const token = req.headers.authorization
-      ? req.headers.authorization.split(" ")[1]
-      : "";
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader) {
+      throw new CustomError("unauthorized access: Token not found", 401);
+    }
+
+    const token = authHeader.split(" ")[1];
     const cookieToken = req.cookies.__access;
 
-    if (!token && !cookieToken)
+    if (!cookieToken)
       throw new CustomError("unauthorized access: Token not found", 401);
 
     // Implementation allows for authorization to be read from req header and httpOnly cookie

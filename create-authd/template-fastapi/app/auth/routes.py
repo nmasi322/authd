@@ -44,7 +44,8 @@ def login(request: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invalid Credentials")
 
     access_token = token.create_access_token(data={"sub": user.username})
-    return {"access_token": access_token, "token_type": "bearer"}
+    refresh_token = token.create_refresh_token(data={"sub": user.username})
+    return {"access_token": access_token, "token_type": "bearer", "refresh_token": refresh_token}
 
 @router.post("/password-reset/{username}")
 def password_reset(username: str, new_password: str, db: Session = Depends(get_db)):
@@ -64,6 +65,5 @@ def password_reset(username: str, new_password: str, db: Session = Depends(get_d
 
 @router.post("/refresh-token")
 def refresh_token(current_user: str = Depends(token.verify_token)):
-    # Generate a new access token based on the current user
-    new_access_token = token.create_access_token(data={"sub": current_user})
+    new_access_token = token.create_refresh_token(data={"sub": current_user})
     return {"access_token": new_access_token, "token_type": "bearer"}

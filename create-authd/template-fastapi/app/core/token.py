@@ -1,4 +1,5 @@
 from fastapi import HTTPException, status
+import secrets
 
 # JWT Imports
 from jose import JWTError, jwt
@@ -25,13 +26,9 @@ def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-refresh_token_expire_minutes = 60 * 24 * 7
-def create_refresh_token(data:dict):
-    to_encode = data.copy()
-    expire = timedelta(minutes=refresh_token_expire_minutes) + datetime.utcnow()
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
+def generate_refresh_token():
+    return secrets.token_urlsafe(32)
+
 
 def verify_token(token: str):
     credentials_exception = HTTPException(

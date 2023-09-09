@@ -1,6 +1,7 @@
 # FastAPI Import
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Form
 from fastapi.security import OAuth2PasswordRequestForm
+from datetime import datetime, timedelta
 
 # SqlAlchemy Import
 from sqlalchemy.orm import Session
@@ -43,8 +44,13 @@ def login(request: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(
         #return False
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invalid Credentials")
 
+    refresh_token = token.generate_refresh_token()
+    
+    db_refresh_token = models.RefreshToken(token=refresh_token, user_id=user.id, expires_at=datetime.utcnow() + timedelta(days=30))
+    db.add(db_refresh_token)
+    db.commit()
+
     access_token = token.create_access_token(data={"sub": user.username})
-    refresh_token = token.create_refresh_token(data={"sub": user.username})
     return {"access_token": access_token, "token_type": "bearer", "refresh_token": refresh_token}
 
 @router.post("/password-reset/{username}")
@@ -64,6 +70,18 @@ def password_reset(username: str, new_password: str, db: Session = Depends(get_d
     return {"message": "Password reset successful"}
 
 @router.post("/refresh-token")
-def refresh_token(current_user: str = Depends(token.verify_token)):
-    new_access_token = token.create_refresh_token(data={"sub": current_user})
-    return {"access_token": new_access_token, "token_type": "bearer"}
+def refresh_access_token(refresh_token: str = Form(...), db: Session = Depends(get_db)):
+    # Verify the refresh token in the database
+    db_refresh_token = db.query(models.RefreshToken).filter(models.RefreshToken.token == refresh_token).first()
+    if not db_refresh_token:
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
+
+    # Check if the refresh token has expired
+    if db_refresh_token.expires_at < datetime.utcnow():
+        raise HTTPException(status_code=401, detail="Expired refresh token")
+
+    # Create a new access token
+    user = db.query(models.User).filter(models.User.id == db_refresh_token.user_id).first()
+    access_token = token.create_access_token({"sub": user.username})
+
+    return {"access_token": access_token, "token_type": "bearer"}

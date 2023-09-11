@@ -1,0 +1,12 @@
+bcrypt
+cryptography
+decouple
+fastapi
+passlib
+pydantic
+python-dotenv
+python-jose
+python-multipart
+secret-key-generator
+SQLAlchemy
+uvicorn

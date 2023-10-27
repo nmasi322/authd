@@ -5,7 +5,7 @@ import prompts from "prompts";
 import { reset, red, lightBlue, magenta, cyan } from "kolorist";
 import { fileURLToPath } from "node:url";
 import spawn from "cross-spawn";
-import { green, yellow } from "kolorist";
+import { green, yellow, blue } from "kolorist";
 // excludes numerical autoconversion of project name by defining that the args
 // non associated with an option ( _ ) needs to be parsed as a string.
 const argv = minimist(process.argv.slice(2), { string: ["_"] });
@@ -45,6 +45,27 @@ const Frameworks = [
             },
         ],
     },
+
+  // FastAPI
+  {
+   name: "fastapi",
+   display: "FastAPI",
+   color: blue,
+   moduleSystem: [
+    {
+      display: "Python",
+      templateName: "fastapi",
+      color: green,
+    }
+   ],
+   variants: [
+    {
+      name: "python-fastapi",
+      display: "FastAPI & SQLite",
+      color: cyan,
+    }
+   ]
+  }
 ];
 const templates = Frameworks.map((framework) => (framework.variants &&
     framework.variants.map((variant) => variant.name)) || [framework.name]).reduce((a, b) => a.concat(b), []);
@@ -190,6 +211,9 @@ async function initialise() {
             if (pkgManager === "bun") {
                 return "bun x";
             }
+            if (pkgManager === "virtualenv") {
+                return "virtualenv"
+            }
             // Use `npm exec` in all other cases,
             // including Yarn 1.x and other custom npm clients.
             return "npm exec";
@@ -213,30 +237,60 @@ async function initialise() {
             copy(path.join(templateDir, file), targetPath);
         }
     };
-    const files = fs.readdirSync(templateDir);
-    for (const file of files.filter((f) => f !== "package.json")) {
-        write(file);
+
+    // Check for python package manager
+    const isPython = templateDir.includes('template-python-fastapi');
+
+    if (isPython) {
+        // Check if venv folder already exists, and if it does, delete it
+        const venvPath = path.join(rootPath, 'venv');
+        if (fs.existsSync(venvPath)) {
+            fs.rmSync(venvPath, { recursive: true });
+        }
+
+        // Create a virtual environment
+        const venvCommand = process.platform === 'win32' ? 'python' : 'python3';
+        spawn(venvCommand, ['-m', 'venv', 'venv'], { stdio: 'inherit', cwd: rootPath });
+        
+        copy(templateDir, rootPath)
+
+        const cdProjectName = path.relative(cwd, rootPath);
+        console.log(`\n cd ${cdProjectName}`)
+        console.log("\n Then run:\n")
+        console.log("  source venv/bin/activate");
+        console.log("  python3 -m pip install -r requirements.txt");
+        console.log("  uvicorn main:app --reload")
+
+    } else {
+        const files = fs.readdirSync(templateDir);
+        for (const file of files.filter((f) => f !== "package.json")) {
+            write(file);
+        }
+        const pkg = JSON.parse(fs.readFileSync(path.join(templateDir, `package.json`), "utf-8"));
+        pkg.name = packageName || getProjectName();
+        write("package.json", JSON.stringify(pkg, null, 2) + "\n");
+        const cdProjectName = path.relative(cwd, rootPath);
+        console.log(`\nDone. Now go to https://www.useplunk.com/ signup and grab your mailing api keys, then setup your config details`);
+        console.log(`\nThen run:\n`);
+        if (rootPath !== cwd) {
+            console.log(`  cd ${cdProjectName.includes(" ") ? `"${cdProjectName}"` : cdProjectName}`);
+        }
+        switch (pkgManager) {
+            case "yarn":
+                console.log("  yarn");
+                console.log("  yarn dev");
+                break;
+            case isPython:
+                
+                break;
+            default:
+                console.log(`  ${pkgManager} install`);
+                console.log(`  ${pkgManager} run dev`);
+                break;
+        }
     }
-    const pkg = JSON.parse(fs.readFileSync(path.join(templateDir, `package.json`), "utf-8"));
-    pkg.name = packageName || getProjectName();
-    write("package.json", JSON.stringify(pkg, null, 2) + "\n");
-    const cdProjectName = path.relative(cwd, rootPath);
-    console.log(`\nDone. Now go to https://www.useplunk.com/ signup and grab your mailing api keys, then setup your config details`);
-    console.log(`\nThen run:\n`);
-    if (rootPath !== cwd) {
-        console.log(`  cd ${cdProjectName.includes(" ") ? `"${cdProjectName}"` : cdProjectName}`);
-    }
-    switch (pkgManager) {
-        case "yarn":
-            console.log("  yarn");
-            console.log("  yarn dev");
-            break;
-        default:
-            console.log(`  ${pkgManager} install`);
-            console.log(`  ${pkgManager} run dev`);
-            break;
-    }
-    console.log();
+
+    console.log()
 }
 function formatTargetDir(targetDir) {
     return targetDir?.trim().replace(/\/+$/g, "");
@@ -284,6 +338,7 @@ function emptyDir(dir) {
         fs.rmSync(path.resolve(dir, file), { recursive: true, force: true });
     }
 }
+
 function getPackageManager() {
     // This environment variable is set by npm and yarn but pnpm seems less consistent
     const agent = process.env.npm_config_user_agent;
@@ -304,6 +359,13 @@ function getPackageManager() {
             return {
                 name: "yarn",
             };
+
+        // Before that let's take care of python
+        if (process.env.PYTHONPATH || process.env.VIRTUAL_ENV) 
+            return {
+                name: "virtualenv",
+            }; 
+        
         // Assume npm for anything else
         return {
             name: "npm",

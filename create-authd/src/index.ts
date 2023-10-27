@@ -72,7 +72,7 @@ const Frameworks: Framework[] = [
         color: cyan,
       },
     ],
-  },
+  }
 ];
 
 const templates = Frameworks.map(

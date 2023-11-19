@@ -10,3 +10,4 @@ python-multipart
 secret-key-generator
 SQLAlchemy
 uvicorn
+pydantic-settings

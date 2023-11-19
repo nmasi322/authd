@@ -2,7 +2,7 @@ import path from "node:path";
 import fs from "node:fs";
 import minimist from "minimist";
 import prompts from "prompts";
-import { reset, red, lightBlue, magenta, cyan } from "kolorist";
+import { reset, red, lightBlue, magenta, cyan, white } from "kolorist";
 import { fileURLToPath } from "node:url";
 import spawn from "cross-spawn";
 import { blue, green, yellow } from "kolorist";
@@ -70,6 +70,18 @@ const Frameworks: Framework[] = [
         name: "nodejs-mongo-typescript",
         display: "Typescript & MongoDB",
         color: cyan,
+      },
+    ],
+  },
+  {
+    name: "python",
+    display: "Python",
+    color: blue,
+    variants: [
+      {
+        display: "FastAPI",
+        name: "fastapi",
+        color: white,
       },
     ],
   },
@@ -294,39 +306,63 @@ async function initialise() {
   };
 
   const files = fs.readdirSync(templateDir);
-  for (const file of files.filter((f) => f !== "package.json")) {
-    write(file);
-  }
 
-  const pkg = JSON.parse(
-    fs.readFileSync(path.join(templateDir, `package.json`), "utf-8")
-  );
+  if (framework.name === "python") {
+    for (const file of files) {
+      write(file);
+    }
+    const cdProjectName = path.relative(cwd, rootPath);
+    console.log(`\nDone. Now run:\n`);
 
-  pkg.name = packageName || getProjectName();
+    if (rootPath !== cwd) {
+      console.log(
+        `  cd ${
+          cdProjectName.includes(" ") ? `"${cdProjectName}"` : cdProjectName
+        }`
+      );
+    }
 
-  write("package.json", JSON.stringify(pkg, null, 2) + "\n");
+    console.log("  source venv/bin/activate");
+    console.log("  pip3 install -r requirements.txt");
+    console.log("  uvicorn main:app --reload");
+  } else {
+    for (const file of files.filter((f) => f !== "package.json")) {
+      write(file);
+    }
 
-  const cdProjectName = path.relative(cwd, rootPath);
-  console.log(
-    `\nDone. Now go to https://www.useplunk.com/ signup and grab your mailing api keys, then setup your config details`
-  );
-  console.log(`\nThen run:\n`);
-  if (rootPath !== cwd) {
-    console.log(
-      `  cd ${
-        cdProjectName.includes(" ") ? `"${cdProjectName}"` : cdProjectName
-      }`
+    const pkg = JSON.parse(
+      fs.readFileSync(path.join(templateDir, `package.json`), "utf-8")
     );
-  }
-  switch (pkgManager) {
-    case "yarn":
-      console.log("  yarn");
-      console.log("  yarn dev");
-      break;
-    default:
-      console.log(`  ${pkgManager} install`);
-      console.log(`  ${pkgManager} run dev`);
-      break;
+
+    pkg.name = packageName || getProjectName();
+
+    write("package.json", JSON.stringify(pkg, null, 2) + "\n");
+
+    const cdProjectName = path.relative(cwd, rootPath);
+    console.log(
+      `\nDone. Now go to https://www.useplunk.com/ signup and grab your mailing api keys, then setup your config details`
+    );
+
+    console.log(`\nThen run:\n`);
+
+    if (rootPath !== cwd) {
+      console.log(
+        `  cd ${
+          cdProjectName.includes(" ") ? `"${cdProjectName}"` : cdProjectName
+        }`
+      );
+    }
+
+    switch (pkgManager) {
+      case "yarn":
+        console.log("  yarn");
+        console.log("  yarn dev");
+        break;
+      default:
+        console.log(`  ${pkgManager} install`);
+        console.log(`  ${pkgManager} run dev`);
+        break;
+    }
   }
   console.log();
 }

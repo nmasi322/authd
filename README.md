@@ -10,6 +10,10 @@ Get the npm package [here](https://www.npmjs.com/package/create-authd), select y
 
 I'll add other languages when i learn them 😂
 
+## Contributors
+
+Python mudle has been added to v 0.0.8 thanks to our amazing contributor @[Oluwaseun241](https://www.github.com/Oluwaseun241)  🎉
+
 You're free to contribute in other languages.
 
 Bye :)
